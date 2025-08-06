@@ -1,0 +1,73 @@
+name: Build and Release Fyne App
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Install fyne-cross
+        run: |
+          go install github.com/fyne-io/fyne-cross@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
+
+      - name: Build for Windows
+        run: |
+          fyne-cross windows -arch=amd64,arm64 -app-id=ir.dns.jumper
+
+      - name: Build for Linux
+        run: |
+          fyne-cross linux -arch=amd64,arm64
+
+      - name: Rename artifacts
+        run: |
+          pwd
+          tree
+          cd fyne-cross/dist
+          mv windows-amd64/ir-dns-jumper.exe.zip ir-dns-jumper-windows-amd64.zip
+          mv windows-arm64/ir-dns-jumper.exe.zip ir-dns-jumper-windows-arm64.zip
+          mv linux-amd64/ir-dns-jumper.tar.xz ir-dns-jumper-linux-amd64.tar.xz
+          mv linux-arm64/ir-dns-jumper.tar.xz ir-dns-jumper-linux-arm64.tar.xz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fyne-builds
+          path: fyne-cross/dist/ir-dns-jumper-*
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fyne-builds
+          path: dist
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
