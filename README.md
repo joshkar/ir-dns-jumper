@@ -7,6 +7,10 @@ Quickly benchmark, switch, and manage DNS providers without touching system sett
   <img src="Icon.png" alt="IR DNS Jumper" width="96"/>
 </p>
 
+<p align="center">
+  <img src="images/gui-dns.png" alt="IR DNS Jumper — main window" width="720"/>
+</p>
+
 ---
 
 ## Features
