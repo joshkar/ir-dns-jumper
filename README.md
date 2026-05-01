@@ -1,38 +1,70 @@
-# DNS Jumper
+# IR DNS Jumper
 
-A simple cross-platform GUI application (Linux & Windows) to quickly switch DNS profiles or clear DNS settings.
+A cross-platform DNS manager with a dark-themed GUI — built with Python and [Flet](https://flet.dev).  
+Quickly benchmark, switch, and manage DNS providers without touching system settings manually.
+
+<p align="center">
+  <img src="Icon.png" alt="IR DNS Jumper" width="96"/>
+</p>
 
 ---
 
 ## Features
-- Pick and apply predefined DNS profiles  
-- Clear current DNS settings with one click  
-- Works on Linux and Windows  
-- Simple, lightweight interface  
+
+- **Benchmark** — measures latency and DNS response time for every provider in parallel
+- **One-click activate** — sets the chosen DNS on your active network interface
+- **Built-in Iranian providers** — Shekan, Electro, Begzar, Radar, Shellter, Beshkan, Shatell
+- **Custom DNS** — add any DNS by IP, stored permanently in `~/.dns_manager_custom.json`
+- **Flush cache** — clears the local DNS cache without changing DNS settings
+- **Clear DNS** — reverts to automatic (DHCP) DNS with a confirmation prompt
+- **Cross-platform** — macOS, Windows, Linux
 
 ---
 
-## Screenshots
-<p align="center">
-  <img src="images/app.png" alt="Application Main Window" width="45%"/>
-  <img src="images/profiles.png" alt="DNS Profiles Dropdown" width="45%"/>
-</p>
-<p align="center">
-  <img src="images/applied.png" alt="DNS Applied" width="45%"/>
-  <img src="images/cleared.png" alt="DNS Cleared" width="45%"/>
-</p>
+## Requirements
+
+- Python 3.10+
+- pip packages listed in `requirements.txt`
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## Installation
-1. Go to the **Releases** page.  
-2. Download the build for your operating system and architecture (**amd64** or **arm64**).  
-3. Extract the downloaded archive.  
-4. Run the application — no installation required.  
-   - On **Windows**, run the application as **Administrator**.  
-   - On **Linux**, just open the application.
+## Run
 
-## Usage
-1. Select a DNS profile from the dropdown  
-2. Click **Apply** to set it  
-3. Click **Clear** to restore default DNS  
+```bash
+python gui-dns.py
+```
+
+> **macOS / Linux** — commands that change DNS settings (`networksetup`, `nmcli`, etc.) are
+> invoked with `sudo` on-demand. Your terminal may ask for your password the first time.
+>
+> **Windows** — the app auto-triggers a **UAC prompt** at startup if it isn't already running
+> as Administrator. `netsh` requires admin rights to modify DNS settings.
+
+---
+
+## Platform Details
+
+| Action | macOS | Windows | Linux |
+|---|---|---|---|
+| List interfaces | `networksetup` | `netsh interface show` | `nmcli` / `ip link` |
+| Set DNS | `networksetup -setdnsservers` | `netsh interface ip set dns` | `nmcli con mod` |
+| Flush cache | `dscacheutil` + `mDNSResponder` | `ipconfig /flushdns` | `resolvectl` / `systemd-resolved` |
+| Clear DNS | `networksetup … empty` | `netsh … dhcp` | `nmcli con mod ipv4.dns ""` |
+
+---
+
+## Custom DNS
+
+Click **Custom DNS** in the toolbar, enter a name and one or two IP addresses.  
+The entry is saved to `~/.dns_manager_custom.json` and survives restarts.  
+To remove it, click the trash icon on the card.
+
+---
+
+## License
+
+MIT

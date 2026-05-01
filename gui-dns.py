@@ -20,11 +20,10 @@ CUSTOM_DNS_FILE = os.path.expanduser("~/.dns_manager_custom.json")
 
 def ensure_privileges():
     """
-    Make sure the app runs with admin/root privileges before anything starts.
-
-    Windows → checks IsUserAnAdmin(); if not admin, triggers UAC and exits.
-    macOS   → checks euid==0; if not root, replaces process with `sudo python …`.
-    Linux   → same as macOS (uses pkexec as fallback for GUI environments).
+    Windows only: if not running as Administrator, trigger UAC and restart.
+    macOS / Linux: no full-app elevation needed — individual commands that
+    require root (networksetup, nmcli, etc.) are called with sudo on-demand
+    inside run_elevated(), so the GUI itself stays unprivileged.
     """
     if SYSTEM == "windows":
         try:
@@ -40,22 +39,8 @@ def ensure_privileges():
             ret = ctypes.windll.shell32.ShellExecuteW(
                 None, "runas", sys.executable, params, None, 1
             )
-            # ret > 32 means success; the elevated copy is now starting
+            # ret > 32 → success; the elevated copy is now starting
             sys.exit(0 if ret > 32 else 1)
-
-    else:
-        # macOS / Linux — 0 means root
-        if os.geteuid() != 0:
-            if SYSTEM == "linux":
-                # Prefer pkexec in graphical sessions (shows a polkit dialog)
-                pkexec = subprocess.run(
-                    ["which", "pkexec"], capture_output=True, text=True
-                ).stdout.strip()
-                if pkexec:
-                    os.execvp("pkexec", ["pkexec", sys.executable] + sys.argv)
-
-            # macOS & Linux fallback: replace this process with sudo
-            os.execvp("sudo", ["sudo", sys.executable] + sys.argv)
 
 def load_custom_dns() -> dict:
     try:
